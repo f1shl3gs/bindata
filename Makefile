@@ -1,4 +1,4 @@
-TAG := "1.0.0"
+TAG := "1.0.1"
 
 build:
 	CGO_ENABLED=0 go build -o docker/bindata cmd/bindata/*.go

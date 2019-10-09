@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -21,6 +22,7 @@ var (
 	trims    []string
 	ignores  []string
 	verbose  bool
+	tags     []string
 )
 
 func NewGenerateCommand() *cobra.Command {
@@ -38,6 +40,7 @@ func NewGenerateCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&output, "output", "o", "", "output name(default: [package]_gen.go)")
 	cmd.Flags().StringSliceVarP(&ignores, "ignore", "", nil, "skip some files")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "", false, "print details")
+	cmd.Flags().StringSliceVarP(&tags, "tag", "", nil, "add tags")
 
 	_ = cmd.MarkFlagRequired("input")
 	_ = cmd.MarkFlagRequired("package")
@@ -102,6 +105,13 @@ func gen(cmd *cobra.Command, args []string) error {
 	}
 
 	data := map[string]interface{}{
+		"tags": func() string {
+			if len(tags) == 0 {
+				return ""
+			}
+
+			return "// +build " + strings.Join(tags, " ")
+		}(),
 		"package": pkg,
 		"misc":    header,
 		"entries": paths,
