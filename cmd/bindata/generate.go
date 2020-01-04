@@ -23,6 +23,11 @@ var (
 	ignores  []string
 	verbose  bool
 	tags     []string
+
+	// gzip
+	gzipBestCompress bool
+	gzipBestSpeed    bool
+	gzipLevel        int
 )
 
 func NewGenerateCommand() *cobra.Command {
@@ -30,7 +35,22 @@ func NewGenerateCommand() *cobra.Command {
 		Use:     "generate",
 		Short:   "generate go source code",
 		Aliases: []string{"gen"},
-		RunE:    gen,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if gzipBestSpeed {
+				gzipLevel = gzip.BestSpeed
+			}
+
+			if gzipBestCompress {
+				gzipLevel = gzip.BestCompression
+			}
+
+			if gzipLevel < gzip.HuffmanOnly || gzipLevel > gzip.BestCompression {
+				return errors.Errorf("invalid gzip compress level %d", gzipLevel)
+			}
+
+			return nil
+		},
+		RunE: gen,
 	}
 
 	cmd.Flags().StringSliceVarP(&inputs, "input", "i", nil, "specify source you want to bind")
@@ -41,6 +61,9 @@ func NewGenerateCommand() *cobra.Command {
 	cmd.Flags().StringSliceVarP(&ignores, "ignore", "", nil, "skip some files")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "", false, "print details")
 	cmd.Flags().StringSliceVarP(&tags, "tag", "", nil, "add tags")
+	cmd.Flags().BoolVarP(&gzipBestCompress, "gzip-best-compress", "", false, "compress with level 9, decompress only happened when the asset first accessed")
+	cmd.Flags().BoolVarP(&gzipBestSpeed, "gzip-best-speed", "", false, "compress with level 1")
+	cmd.Flags().IntVarP(&gzipLevel, "gzip-level", "", -1, "specify compress level")
 
 	_ = cmd.MarkFlagRequired("input")
 	_ = cmd.MarkFlagRequired("package")
@@ -137,8 +160,7 @@ func bytesWriter(file string) string {
 	defer f.Close()
 
 	bw := &ByteWriter{Writer: buf}
-	gz := gzip.NewWriter(bw)
-
+	gz, _ := gzip.NewWriterLevel(bw, gzipLevel)
 	_, err = io.Copy(gz, f)
 	if err != nil {
 		panic(err)
@@ -160,7 +182,7 @@ func stringWriter(file string) string {
 	defer f.Close()
 
 	sw := &StringWriter{Writer: buf}
-	gz := gzip.NewWriter(sw)
+	gz, _ := gzip.NewWriterLevel(sw, gzipLevel)
 
 	_, err = io.Copy(gz, f)
 	if err != nil {
