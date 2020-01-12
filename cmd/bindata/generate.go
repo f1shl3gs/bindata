@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -135,9 +136,11 @@ func gen(cmd *cobra.Command, args []string) error {
 
 			return "// +build " + strings.Join(tags, " ")
 		}(),
-		"package": pkg,
-		"misc":    header,
-		"entries": paths,
+		"package":   pkg,
+		"misc":      header,
+		"entries":   paths,
+		"timestamp": time.Now(),
+		"gzip":      gzipLevel,
 	}
 
 	f, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
