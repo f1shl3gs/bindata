@@ -32,11 +32,12 @@ func (fs *fileSystem) Open(name string) (http.File, error) {
 
 type file struct {
 	os.FileInfo
+
+	// the compressed data
 	data []byte
 
-	// the data filed is the compressed data
-	// raw is decompressed
-	raw []byte
+	// the decompressed and cached for later usage
+	cache []byte
 }
 
 type fileInfo struct {
@@ -98,18 +99,18 @@ func bindataRead(data []byte) ([]byte, error) {
 }
 
 func newHTTPFile(file file, isDir bool) (*httpFile, error) {
-	if file.raw == nil && file.data != nil {
-		raw, err := bindataRead(file.data)
+	if file.cache == nil && file.data != nil {
+		cache, err := bindataRead(file.data)
 		if err != nil {
 			return nil, fmt.Errorf("read %s failed", file.Name())
 		}
 
-		file.raw = raw
+		file.cache = cache
 	}
 
 	return &httpFile{
 		file:   file,
-		reader: bytes.NewReader(file.raw),
+		reader: bytes.NewReader(file.cache),
 		isDir:  isDir,
 	}, nil
 }
