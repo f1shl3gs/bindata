@@ -15,4 +15,4 @@ docker image is available `docker pull f1shl3gs/bindata:latest`
 - Gzip Level, decompress only happened when the asset first access 
     (`--gzip-best-compress` is useful when you have a lot asset
     or want minimal dist size)
-- Transform file path, eg: trim prefix
+- Transform file path, eg: `--transfer your/prefix:your/new/prefix`
