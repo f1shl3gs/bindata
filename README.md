@@ -1,5 +1,7 @@
 # bindata
 
+**NOTE: [embed](https://golang.org/pkg/embed/) is introduced since Golang 1.16, so this repo is no need to exist anymore.**
+
 convert any file into manageable Go source code for http service
 
 ## Usage
